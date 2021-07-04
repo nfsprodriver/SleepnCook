@@ -7,9 +7,7 @@ import org.bukkit.block.Furnace
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.TimeSkipEvent
-import org.bukkit.inventory.CookingRecipe
-import org.bukkit.inventory.FurnaceRecipe
-import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.*
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.math.min
@@ -25,6 +23,7 @@ class TimeSkip(private val plugin: JavaPlugin) : Listener {
                 val fuel: ItemStack? = furnace.inventory.fuel
                 val source: ItemStack? = furnace.inventory.smelting
                 if (fuel != null && source != null) {
+                    val recipe: CookingRecipe<*> = getRecipeBySource(source) ?: return
                     val fuelBurningTime: Short = fuelBurningTimes.getOrDefault(fuel.type, 300)
                     val result: ItemStack? = furnace.inventory.result
                     var fuelRemAmount: Int = (event.skipAmount / fuelBurningTime).toInt()
@@ -39,11 +38,12 @@ class TimeSkip(private val plugin: JavaPlugin) : Listener {
                         sourceRemAmount++
                         sourceAddTicks = (sourceAddTicks - furnace.cookTime).toShort()
                     }
-                    fuel.amount = fuel.amount.minus(min(fuelRemAmount, fuel.amount))
-                    source.amount = source.amount.minus(min(sourceRemAmount, source.amount))
+                    fuelRemAmount = min(fuelRemAmount, fuel.amount)
+                    fuel.amount = fuel.amount.minus(fuelRemAmount)
+                    sourceRemAmount = min(sourceRemAmount, source.amount)
+                    source.amount = source.amount.minus(sourceRemAmount)
                     furnace.burnTime = furnace.burnTime.plus(fuelAddTicks).toShort()
                     furnace.cookTime = furnace.cookTime.plus(sourceAddTicks).toShort()
-                    val recipe: CookingRecipe<*> = getRecipeBySource(source) ?: return
                     val recipeResult: ItemStack = recipe.result.clone()
                     recipeResult.amount = (result?.amount ?: 0) + sourceRemAmount
                     val recipeXp: Float = recipe.experience
