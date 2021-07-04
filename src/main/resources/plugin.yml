@@ -1,0 +1,6 @@
+main: SleepnCook
+name: SleepnCook
+version: 1.0
+api-version: "1.17"
+author: Bjarne Roß
+description: Create a Lore using a Button!
